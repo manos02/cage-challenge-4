@@ -2,18 +2,15 @@ from CybORG import CybORG
 from CybORG.Simulator.Scenarios import EnterpriseScenarioGenerator
 from CybORG.Agents.Wrappers import BlueFixedActionWrapper
 from CybORG.Agents.Wrappers import BlueFlatWrapper
-from Trainers.ippo import PPOTrainer
+from Trainers.ippo_RLIB import CC4EnvManager
 import argparse
 import warnings
-
-
 
 
 # code from https://github.com/Davide236/Collaborative_RL_CAGE_4/blob/main/train.py
 # File made to train different RL algorithms on the CybORG environment
 def main():
     
-
     # Create the parser
     parser = argparse.ArgumentParser(description="Process input parameters for agent training")
 
@@ -65,11 +62,13 @@ def main():
     print(f'Using method: {method}, loading network: {args.Load_best | args.Load_last}, Using messages: {args.Messages}')
     
 
+    # trainer = PPOTrainer(args)
+    # trainer.run()
 
-
-
-    trainer = PPOTrainer(args)
+    trainer = CC4EnvManager()
     trainer.run()
+
+
 
 if __name__ == "__main__":
     main()
