@@ -1,10 +1,7 @@
-import time
 
 from statistics import mean, stdev
-from typing import Any, Dict, Tuple
+from typing import Dict
 from rich import print
-import optuna
-from ray import tune
 from ray.tune import Tuner, TuneConfig
 from CybORG import CybORG
 from ray.tune.search.optuna import OptunaSearch
@@ -17,8 +14,8 @@ from ray.rllib.algorithms.ppo import PPOConfig, PPOTorchPolicy, PPO
 from ray.rllib.policy.policy import PolicySpec
 from ray.tune import register_env
 
-from .action_mask_model import TorchActionMaskModel
-from ray.rllib.models import ModelCatalog
+# from .action_mask_model import TorchActionMaskModel
+# from ray.rllib.models import ModelCatalog
 
 
 import warnings
@@ -82,16 +79,13 @@ def build_algo_config():
     config = (
         PPOConfig()
         .framework("torch")
-        .debugging(log_level='ERROR')
+        .debugging(log_level='INFO') 
         .environment(env="CC4")
         .resources(num_gpus=1)  # Use if GPUs are available
         .env_runners(
             batch_mode="complete_episodes",
             num_env_runners=30, # parallel sampling
         )
-        # .training(
-        #     train_batch_size=128,
-        # )
         .multi_agent(
             policies=policies,
             policy_mapping_fn=policy_mapper,
@@ -102,10 +96,10 @@ def build_algo_config():
 def optuna_space(trial):
     return {
         "training": {
-            "lr": trial.suggest_loguniform("lr", 1e-4, 1e-2),
-            "clip_param": trial.suggest_uniform("clip_param", 0.1, 0.3),
+            "lr": trial.suggest_float("lr", 1e-4, 1e-2, log=True),
+            "clip_param": trial.suggest_float("clip_param", 0.1, 0.3),
         },
-        "rollouts": {
+        "env_runners": {
             "num_rollout_workers": trial.suggest_int("num_workers", 1, 8),
         },
     }
@@ -119,27 +113,22 @@ def run_training():
     """
     # model_dir = "models/train_marl"
     # algo = build_algo_config().build()
-    
-    # for i in range(200):
-    #     start = time.time()
-    #     result = algo.train()
-    #     stop = time.time()
-    #     duration = stop-start
-    #     print(duration)
-        # print(result)
-        # print(f"Iteration {i}: reward_mean={result['episode_reward_mean']}")
-        # checkpoint_dir = os.path.join(model_dir, f"iter_{i}")
-        # os.makedirs(checkpoint_dir, exist_ok=True)
-        # algo.save(checkpoint_dir)
+
     optuna_search = OptunaSearch(
-        metric="episode_reward_mean", # Training result objective
+        metric="env_runners/episode_reward_mean", # Training result objective
         mode="max", # Maximize the objective
         space=optuna_space,
     )
 
     
     # Performs early stopping for underperforming trials. Optimizes episode_rewarid_mean
-    asha = ASHAScheduler(metric="episode_reward_mean", mode="max")
+    asha = ASHAScheduler(
+        metric="env_runners/episode_reward_mean",
+        mode="max",
+        max_t=1, # trials that survive long enough get stopped at 50 iters
+        grace_period=5, # stop a trial if it is longer than 5 iterations
+    )
+
     
     config = build_algo_config()
     tuner = Tuner(
@@ -148,7 +137,7 @@ def run_training():
         tune_config=TuneConfig(
             search_alg=optuna_search,
             scheduler=asha,
-            num_samples=2, # how many Optuna trials
+            num_samples=5, # how many Optuna trials. Each time with different sampling 
         ),
     )
 
@@ -156,10 +145,7 @@ def run_training():
 
     best_res = result_grid.get_best_result()
     print("Best config:", best_res.config)
-    print("Best reward:", best_res.metrics["episode_reward_mean"])
-
-
-
+    print("Best res metrics:", best_res.metrics)
 
 if __name__ == "__main__":
     run_training()
