@@ -1,5 +1,4 @@
 
-from statistics import mean, stdev
 from typing import Dict
 from rich import print
 from ray.tune import Tuner, TuneConfig
@@ -17,7 +16,6 @@ from ray.tune import register_env
 # from .action_mask_model import TorchActionMaskModel
 # from ray.rllib.models import ModelCatalog
 
-
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -26,12 +24,6 @@ NUM_AGENTS = 5
 POLICY_MAP: Dict[str, str] = {
     f"blue_agent_{i}": f"Agent{i}" for i in range(NUM_AGENTS)
 }
-
-## Register custom model
-# ModelCatalog.register_custom_model(
-#     "my_model",
-#     TorchActionMaskModel
-# )
 
 # Environment creator function
 def env_creator_CC4(env_config: dict) -> MultiAgentEnv:
@@ -93,11 +85,16 @@ def build_algo_config():
     )
     return config
 
+
 def optuna_space(trial):
+    """
+    trial.suggest samples one value from the interval provided
+    """
     return {
         "training": {
             "lr": trial.suggest_float("lr", 1e-4, 1e-2, log=True),
             "clip_param": trial.suggest_float("clip_param", 0.1, 0.3),
+            "training_batch_size": trial.suggest_int("training_batch_size", 100000, 1000000), # default 4000
         },
         "env_runners": {
             "num_rollout_workers": trial.suggest_int("num_workers", 1, 8),
@@ -105,30 +102,23 @@ def optuna_space(trial):
     }
 
 
-
-# Main training entrypoint
 def run_training():
     """
     Build and run the PPO algorithm for a fixed number of iterations, saving models.
     """
-    # model_dir = "models/train_marl"
-    # algo = build_algo_config().build()
-
     optuna_search = OptunaSearch(
         metric="env_runners/episode_reward_mean", # Training result objective
         mode="max", # Maximize the objective
         space=optuna_space,
     )
 
-    
     # Performs early stopping for underperforming trials. Optimizes episode_rewarid_mean
     asha = ASHAScheduler(
         metric="env_runners/episode_reward_mean",
         mode="max",
-        max_t=1, # trials that survive long enough get stopped at 50 iters
+        max_t=50, # trials that survive long enough get stopped at 50 iters
         grace_period=5, # stop a trial if it is longer than 5 iterations
     )
-
     
     config = build_algo_config()
     tuner = Tuner(
@@ -137,7 +127,7 @@ def run_training():
         tune_config=TuneConfig(
             search_alg=optuna_search,
             scheduler=asha,
-            num_samples=5, # how many Optuna trials. Each time with different sampling 
+            num_samples=1, # how many Optuna trials. Each time with different sampling 
         ),
     )
 
@@ -149,3 +139,16 @@ def run_training():
 
 if __name__ == "__main__":
     run_training()
+
+
+"""
+1. Num_env_runners creates x copies of the environment
+2. Each runner samples episodes to completion, since batch_mode = 'complete_episodes"
+3. The big batch is shuffled into mini-batches
+4. For a number of epochs, it iterates over each mini batch and performs:
+    - Policy loss
+    - Value loss
+    - Entropy bonus
+5. Each minibatch update moves the network weights
+6. ASHA examines the episode reward mean
+"""
