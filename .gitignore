@@ -1,5 +1,10 @@
 myenv/
 
+
+
+*.out
+
+
 *.*~
 __pycache__/
 *.pkl
