@@ -11,9 +11,14 @@ from ray.tune.schedulers import ASHAScheduler
 from ray.rllib.env import MultiAgentEnv
 from ray.rllib.algorithms.ppo import PPOConfig, PPOTorchPolicy, PPO
 from ray.rllib.policy.policy import PolicySpec
+from ray.rllib.core.rl_module.rl_module import RLModuleSpec
 from ray.tune import register_env
 from ray.rllib.models import ModelCatalog
 from .action_mask_model import TorchActionMaskModel
+from ray.rllib.examples.rl_modules.classes.action_masking_rlm import (
+    ActionMaskingTorchRLModule,
+)
+from gymnasium.spaces import Box, Discrete
 
 import pandas as pd
 from ray.train import RunConfig, CheckpointConfig
@@ -22,9 +27,10 @@ from ray.train import RunConfig, CheckpointConfig
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-# ModelCatalog.register_custom_model(
-#     "my_model", TorchActionMaskModel
-# )
+# TODO: modify TorchActionMaskModel so it is compatible with new api stack
+ModelCatalog.register_custom_model(
+    "my_model", TorchActionMaskModel
+)
 
 # Number of blue agents and mapping to policy IDs
 NUM_AGENTS = 5
@@ -79,22 +85,28 @@ def build_algo_config():
         PPOConfig()
         .framework("torch")
         .debugging(log_level='INFO') 
-        .environment(env="CC4")
+        .environment(
+            env="CC4",
+        )
         .resources(
             num_gpus=1,
-            )  # Use if GPUs are available
+        )  # Use if GPUs are available
         .env_runners(
             batch_mode="complete_episodes",
             num_env_runners=30, # parallel sampling
             num_cpus_per_env_runner=0.5,
+            sample_timeout_s=None, # time for each worker to sample timesteps
         )
         .multi_agent(
             policies=policies,
             policy_mapping_fn=policy_mapper,
         )
-    #     .training(
-    #         model={"custom_model": "my_model"},
-    #     )
+        .training(
+            model={"custom_model": "my_model"}
+        )
+        # .experimental(
+        #     _disable_preprocessor_api=True,  
+        # )        
     )
     return config
 
@@ -107,10 +119,10 @@ def optuna_space(trial):
         "training": {
             "lr": trial.suggest_float("lr", 1e-4, 1e-2, log=True), # default 0.01
             # "clip_param": trial.suggest_float("clip_param", 0.1, 0.3), # default 
-            "training_batch_size": trial.suggest_int("training_batch_size", 100000, 1000000), # default 4000
+            # "train_batch_size": trial.suggest_int("train_batch_size", 100000, 1000000), # default 4000
+            "train_batch_size": trial.suggest_int("train_batch_size", 1000, 5000), # default 4000
         },
     }
-
 
 def run_training():
     """
@@ -126,7 +138,7 @@ def run_training():
     asha = ASHAScheduler(
         metric="env_runners/episode_reward_mean",
         mode="max",
-        max_t=20, # trials that survive long enough get stopped at 50 iters
+        max_t=50, # trials that survive long enough get stopped at 50 iters
         grace_period=5, # stop a trial if it is longer than 5 iterations
     )
     
@@ -139,16 +151,9 @@ def run_training():
             scheduler=asha,
             num_samples=1, # how many Optuna trials. Each time with different sampling 
         ),
-        # run_config=RunConfig(
-        # name="CybORG_IPPO",
-        # local_dir="~/projects/cage-challenge-4/ray_results",
-        # checkpoint_config=CheckpointConfig(
-        #     num_to_keep=5,                                    # keep top 5
-        #     checkpoint_score_attribute="env_runners/episode_reward_mean",
-        #     checkpoint_score_order="max",
-        #     checkpoint_frequency=10,                          # every 10 iters
-        #     checkpoint_at_end=True),
-        # ),
+        run_config=RunConfig(
+            storage_path="~/projects/cage-challenge-4/ray_results",
+        )
     )
 
     result_grid = tuner.fit()

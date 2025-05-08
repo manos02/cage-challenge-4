@@ -26,13 +26,14 @@ class TorchActionMaskModel(TorchModelV2, nn.Module):
     ):
         orig_space = getattr(obs_space, "original_space", obs_space)
         
-        print('obs_space', obs_space)
+        print('orig_space.spaces: ', orig_space)
 
-        # assert (
-        #     isinstance(orig_space, Dict)
-        #     and "action_mask" in orig_space.spaces
-        #     and "observations" in orig_space.spaces
-        # )
+        
+        assert (
+            isinstance(orig_space, Dict)
+            and "action_mask" in orig_space.spaces
+            and "observations" in orig_space.spaces
+        )
 
         TorchModelV2.__init__(
             self, obs_space, action_space, num_outputs, model_config, name, **kwargs
