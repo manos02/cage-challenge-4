@@ -26,9 +26,6 @@ class TorchActionMaskModel(TorchModelV2, nn.Module):
     ):
         orig_space = getattr(obs_space, "original_space", obs_space)
         
-        print('orig_space.spaces: ', orig_space)
-
-        
         assert (
             isinstance(orig_space, Dict)
             and "action_mask" in orig_space.spaces

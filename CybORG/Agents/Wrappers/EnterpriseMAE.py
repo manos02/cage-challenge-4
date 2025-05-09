@@ -14,6 +14,9 @@ class EnterpriseMAE(BlueEnterpriseWrapper, MultiAgentEnv):
     information out of the state object.
     """
 
+    # def __init__(self, env: MultiAgentEnv): #trial
+    #     MultiAgentEnv.__init__(env)
+
     def step(
         self,
         action_dict: dict[str, Any] | None = None,
@@ -70,3 +73,4 @@ class EnterpriseMAE(BlueEnterpriseWrapper, MultiAgentEnv):
         terminated["__all__"] = False
         truncated["__all__"] = self.env.environment_controller.determine_done()
         return obs, rew, terminated, truncated, info
+

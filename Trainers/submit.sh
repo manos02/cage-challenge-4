@@ -19,4 +19,4 @@ ray start --head \
 
 sleep 10
 
-python -m Trainers.ippo_RLIB
+python -m Trainers.ippo_hyperparameter

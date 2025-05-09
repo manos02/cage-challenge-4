@@ -104,9 +104,9 @@ def build_algo_config():
         .training(
             model={"custom_model": "my_model"}
         )
-        # .experimental(
-        #     _disable_preprocessor_api=True,  
-        # )        
+        .experimental(
+            _disable_preprocessor_api=True,  
+        )        
     )
     return config
 

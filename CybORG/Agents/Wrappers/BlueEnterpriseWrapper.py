@@ -4,15 +4,10 @@ from typing import Any
 import numpy as np
 
 from CybORG import CybORG
-from CybORG.Agents.Wrappers.BlueFixedActionWrapper import (
-    MESSAGE_LENGTH,
-    EMPTY_MESSAGE,
-    NUM_MESSAGES,
-)
 
 from gymnasium.spaces import Space
 
-from CybORG.Agents.Wrappers import BlueFlatWrapper, BlueFixedActionWrapper
+from CybORG.Agents.Wrappers  import BlueFlatWrapper
 
 
 class BlueEnterpriseWrapper(BlueFlatWrapper):
@@ -120,3 +115,11 @@ class BlueEnterpriseWrapper(BlueFlatWrapper):
         returns the appropriate observation for each agent.
         """
         return self._short_obs_space
+
+
+    def observation_space(self, agent_name: str) -> Space:
+        """Returns the multi-discrete space corresponding to the given agent."""
+        return super().observation_space(agent_name)
+
+    def get_mission_phase(self):
+        return super().get_mission_phase()
