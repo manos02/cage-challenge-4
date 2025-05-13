@@ -11,23 +11,14 @@ from ray.tune.schedulers import ASHAScheduler
 from ray.rllib.env import MultiAgentEnv
 from ray.rllib.algorithms.ppo import PPOConfig, PPOTorchPolicy, PPO
 from ray.rllib.policy.policy import PolicySpec
-from ray.rllib.core.rl_module.rl_module import RLModuleSpec
 from ray.tune import register_env
 from ray.rllib.models import ModelCatalog
 from .action_mask_model import TorchActionMaskModel
-from ray.rllib.examples.rl_modules.classes.action_masking_rlm import (
-    ActionMaskingTorchRLModule,
-)
-from gymnasium.spaces import Box, Discrete
-
-import pandas as pd
-from ray.train import RunConfig, CheckpointConfig
-
+from ray.train import RunConfig
 
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-# TODO: modify TorchActionMaskModel so it is compatible with new api stack
 ModelCatalog.register_custom_model(
     "my_model", TorchActionMaskModel
 )
@@ -94,7 +85,7 @@ def build_algo_config():
         .env_runners(
             batch_mode="complete_episodes",
             num_env_runners=30, # parallel sampling
-            num_cpus_per_env_runner=0.5,
+            num_cpus_per_env_runner=1,
             sample_timeout_s=None, # time for each worker to sample timesteps
         )
         .multi_agent(
@@ -112,15 +103,16 @@ def build_algo_config():
 
 
 def optuna_space(trial):
-    """
+    """ 
     trial.suggest samples one value from the interval provided
     """
     return {
         "training": {
-            "lr": trial.suggest_float("lr", 1e-4, 1e-2, log=True), # default 0.01
+            # "lr": trial.suggest_float("lr", 1e-4, 1e-2, log=True), # default 0.01
             # "clip_param": trial.suggest_float("clip_param", 0.1, 0.3), # default 
-            # "train_batch_size": trial.suggest_int("train_batch_size", 100000, 1000000), # default 4000
-            "train_batch_size": trial.suggest_int("train_batch_size", 1000, 5000), # default 4000
+            "train_batch_size": trial.suggest_int("train_batch_size", 1000000, 1000001), # default 4000
+            "minibatch_size": trial.suggest_int("minibatch_size", 32768, 32769), 
+            # "train_batch_size": trial.suggest_int("train_batch_size", 1000, 5000), # default 4000
         },
     }
 
@@ -162,8 +154,8 @@ def run_training():
     print("Best config:", best_res.config)
     print("Best res metrics:", best_res.metrics)
 
-    df = result_grid.get_dataframe() # get a dataframe
-    df.to_csv("tune_results.csv", index=False) # save to csv format
+    # df = result_grid.get_dataframe() # get a dataframe
+    # df.to_csv("tune_results.csv", index=False) # save to csv format
 
 if __name__ == "__main__":
     run_training()
