@@ -13,14 +13,16 @@ from ray.rllib.algorithms.ppo import PPOConfig, PPOTorchPolicy, PPO
 from ray.rllib.policy.policy import PolicySpec
 from ray.tune import register_env
 from ray.rllib.models import ModelCatalog
-from .action_mask_model import TorchActionMaskModel
+from .ippo_action_mask_model import TorchActionMaskModelIppo
+from .mappo_action_mask_model import TorchActionMaskModelMappo
 from ray.train import RunConfig
 
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
+
 ModelCatalog.register_custom_model(
-    "my_model", TorchActionMaskModel
+    "mappo_model", TorchActionMaskModelMappo
 )
 
 # Number of blue agents and mapping to policy IDs
@@ -63,7 +65,7 @@ def build_algo_config():
     policies: Dict[str, PolicySpec] = {
         ray_agent: PolicySpec(
             policy_class=PPOTorchPolicy,
-            observation_space=env.observation_space(cyborg_agent),
+            observation_space=(env.observation_spaces(), cyborg_agent),
             action_space=env.action_space(cyborg_agent),
             config={
                 "entropy_coeff": 0.001
@@ -72,10 +74,13 @@ def build_algo_config():
         for cyborg_agent, ray_agent in POLICY_MAP.items()
     }
 
+    # print(env.observation_spaces())
+    # exit(0)
+
     config = (
         PPOConfig()
         .framework("torch")
-        .debugging(log_level='INFO') 
+        # .debugging(log_level='INFO') 
         .environment(
             env="CC4",
         )
@@ -84,7 +89,7 @@ def build_algo_config():
         )  # Use if GPUs are available
         .env_runners(
             batch_mode="complete_episodes",
-            num_env_runners=30, # parallel sampling
+            num_env_runners=0, # parallel sampling, set 0 for debugging
             num_cpus_per_env_runner=1,
             sample_timeout_s=None, # time for each worker to sample timesteps
         )
@@ -93,7 +98,7 @@ def build_algo_config():
             policy_mapping_fn=policy_mapper,
         )
         .training(
-            model={"custom_model": "my_model"}
+            model={"custom_model": "mappo_model"}
         )
         .experimental(
             _disable_preprocessor_api=True,  
@@ -110,9 +115,9 @@ def optuna_space(trial):
         "training": {
             # "lr": trial.suggest_float("lr", 1e-4, 1e-2, log=True), # default 0.01
             # "clip_param": trial.suggest_float("clip_param", 0.1, 0.3), # default 
-            "train_batch_size": trial.suggest_int("train_batch_size", 1000000, 1000001), # default 4000
-            "minibatch_size": trial.suggest_int("minibatch_size", 32768, 32769), 
-            # "train_batch_size": trial.suggest_int("train_batch_size", 1000, 5000), # default 4000
+            # "train_batch_size": trial.suggest_int("train_batch_size", 1000000, 1000001), # default 4000
+            # "minibatch_size": trial.suggest_int("minibatch_size", 32768, 32769), 
+            "train_batch_size": trial.suggest_int("train_batch_size", 1000, 5000), # default 4000
         },
     }
 

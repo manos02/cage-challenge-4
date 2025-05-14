@@ -27,9 +27,6 @@ from CybORG.Agents.Wrappers.BlueFixedActionWrapper import (
     MESSAGE_LENGTH,
     EMPTY_MESSAGE,
     NUM_MESSAGES,
-    SUBNET_USER_FORMAT,
-    SUBNET_SERVER_FORMAT,
-    SUBNET_ROUTER_FORMAT
 )
 
 NUM_SUBNETS = 9
@@ -900,6 +897,7 @@ class BlueFlatWrapper(BlueFixedActionWrapper):
     def observation_space(self, agent_name: str) -> Space:
         """Returns the multi-discrete space corresponding to the given agent."""
         return self._observation_space[agent_name]
+    
 
     @functools.lru_cache(maxsize=None)
     def observation_spaces(self) -> dict[str, Space]:
