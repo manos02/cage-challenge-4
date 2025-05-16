@@ -13,8 +13,7 @@ from ray.rllib.algorithms.ppo import PPOConfig, PPOTorchPolicy, PPO
 from ray.rllib.policy.policy import PolicySpec
 from ray.tune import register_env
 from ray.rllib.models import ModelCatalog
-from .ippo_action_mask_model import TorchActionMaskModelIppo
-from .mappo_action_mask_model import TorchActionMaskModelMappo
+from mappo_action_mask_model import TorchActionMaskModelMappo
 from ray.train import RunConfig
 
 import warnings

@@ -2,7 +2,7 @@ import pytest
 from CybORG.Agents.SimpleAgents.EnterpriseGreenAgent import EnterpriseGreenAgent
 from CybORG.Agents.SimpleAgents.ConstantAgent import SleepAgent
 from CybORG.Agents.SimpleAgents.FiniteStateRedAgent import FiniteStateRedAgent
-from CybORG.Agents.Wrappers.BlueEnterpriseWrapper import BlueEnterpriseWrapper
+from ppo.BlueEnterpriseWrapper import BlueEnterpriseWrapper
 from CybORG.Simulator.Scenarios.EnterpriseScenarioGenerator import EnterpriseScenarioGenerator
 from CybORG.env import CybORG
 

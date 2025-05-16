@@ -15,6 +15,9 @@ from ray.tune import register_env
 from ray.rllib.models import ModelCatalog
 from ippo_action_mask_model import TorchActionMaskModelIppo
 from ray.train import RunConfig
+import ray
+import torch
+import os
 
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -123,6 +126,11 @@ def run_training():
     """
     Build and run the PPO algorithm for a fixed number of iterations, saving models.
     """
+
+    # Connect to the cluster
+    ray.init(address="auto")
+
+
     optuna_search = OptunaSearch(
         metric="env_runners/episode_reward_mean", # Training result objective
         mode="max", # Maximize the objective
@@ -136,6 +144,10 @@ def run_training():
         max_t=50, # trials that survive long enough get stopped at 50 iters
         grace_period=5, # stop a trial if it is longer than 5 iterations
     )
+
+    
+    print("Torch sees:", torch.cuda.device_count(), "GPUs; available:", torch.cuda.is_available())
+
     
     config = build_algo_config()
     tuner = Tuner(

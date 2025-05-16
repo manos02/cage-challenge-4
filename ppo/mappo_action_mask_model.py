@@ -28,37 +28,31 @@ class TorchActionMaskModelMappo(TorchModelV2, nn.Module):
         # Recover the original gym space before Rllib wrap
         orig_space = getattr(obs_space, "original_space", obs_space)
 
-        print("ORIG SPACE", orig_space)
+        # print("ORIG SPACE", orig_space)
 
+        agent = orig_space[1]
+        agent_space = orig_space[0][agent]
+
+
+        # print(orig_space[0])
+        # print("agent space", agent_space)
         
         # print("ORIG_SPACE:", orig_space["observations"])
-        exit(0)
-
-        
 
         assert (
-            isinstance(orig_space, Dict)
-            and "action_mask" in orig_space.spaces
-            and "observations" in orig_space.spaces
+            isinstance(agent_space, Dict)
+            and "action_mask" in agent_space.spaces
+            and "observations" in agent_space.spaces
         )
-
+        
         TorchModelV2.__init__(
             self, obs_space, action_space, num_outputs, model_config, name, **kwargs
         )
         nn.Module.__init__(self)
 
-        # num_agents = 5
-        # flat_obs_dim = obs_space["observations"].shape[0]
-        # self.view_requirements["state"] = ViewRequirement(
-        #     data_col="obs_flat",
-        #     shift=0,
-        #     batch_repeat_value=num_agents,
-        #     space=Box(low=-float("inf"), high=float("inf"), shape=(num_agents * flat_obs_dim,))
-        # )
-
         
         self.internal_model = TorchFC(
-            orig_space["observations"],
+            agent_space["observations"],
             action_space,
             num_outputs,
             model_config,
@@ -67,10 +61,15 @@ class TorchActionMaskModelMappo(TorchModelV2, nn.Module):
 
     
     def forward(self, input_dict, state, seq_lens):
-        # print("INPUT DICT obs", input_dict["obs"], "len", len(input_dict["obs"]))
+        print("INPUT DICT obs", input_dict["obs"])
         # print("INPUT DICT obs flat", input_dict["obs_flat"])
         # print(input_dict["state"])
+
         
+        for agent, d in input_dict["obs"]:
+
+        
+        exit(0)
         '''
         action[b, a] == 1 -> action a is valid in batch_b
         action[b, a] == 0 -> action a is not valid

@@ -21,9 +21,7 @@ NUM_GPUS=${SLURM_GPUS_ON_NODE:-0}
 echo "SLURM_GPUS_ON_NODE=$SLURM_GPUS_ON_NODE; CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES"
 nvidia-smi
 
-
 ray start --head \
-    --node-ip-address=$HOSTNAME \
     --port=6379 \
     --num-cpus=$SLURM_CPUS_PER_TASK \
     --num-gpus=$NUM_GPUS
@@ -32,4 +30,4 @@ sleep 10
 
 cd $HOME/projects/cage-challenge-4
 
-python python ppo/ippo_hyperparameter.py
+python ppo/ippo_hyperparameter.py

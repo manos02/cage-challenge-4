@@ -2,7 +2,7 @@ from ipaddress import IPv4Address
 import random
 from typing import List, Tuple
 import pytest
-from CybORG.Agents.Wrappers.BlueEnterpriseWrapper import BlueEnterpriseWrapper
+from ppo.BlueEnterpriseWrapper import BlueEnterpriseWrapper
 from CybORG.Shared.AgentInterface import AgentInterface
 from CybORG.Shared.Session import Session
 from CybORG.Simulator.Actions.ConcreteActions.ControlTraffic import BlockTrafficZone

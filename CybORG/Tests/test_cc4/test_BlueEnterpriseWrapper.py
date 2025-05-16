@@ -15,7 +15,7 @@ from CybORG.Simulator.Actions import Sleep, Monitor
 from CybORG.Simulator.Actions.ConcreteActions.ControlTraffic import BlockTrafficZone
 from CybORG.Simulator.HostEvents import NetworkConnection
 
-from CybORG.Agents.Wrappers.BlueEnterpriseWrapper import (
+from ppo.BlueEnterpriseWrapper import (
     MESSAGE_LENGTH,
     EMPTY_MESSAGE,
     NUM_MESSAGES,

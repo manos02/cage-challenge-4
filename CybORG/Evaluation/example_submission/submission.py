@@ -2,7 +2,7 @@ from CybORG import CybORG
 from CybORG.Agents import BaseAgent
 
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
-from CybORG.Agents.Wrappers.EnterpriseMAE import EnterpriseMAE
+from ppo.EnterpriseMAE import EnterpriseMAE
 
 # Import your custom agents here.
 from dummy_agent import DummyAgent
