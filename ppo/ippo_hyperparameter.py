@@ -103,7 +103,10 @@ def build_algo_config():
         )
         .experimental(
             _disable_preprocessor_api=True,  
-        )        
+        )
+        .learners(
+            num_gpus_per_learner=1
+        )
     )
     return config
 
@@ -116,8 +119,8 @@ def optuna_space(trial):
         "training": {
             # "lr": trial.suggest_float("lr", 1e-4, 1e-2, log=True), # default 0.01
             # "clip_param": trial.suggest_float("clip_param", 0.1, 0.3), # default 
-            "train_batch_size": trial.suggest_int("train_batch_size", 1000000, 1000001), # default 4000
-            "minibatch_size": trial.suggest_int("minibatch_size", 32768, 32769), 
+            "train_batch_size": trial.suggest_int("train_batch_size", 100000, 100000), # default 4000
+            "minibatch_size": trial.suggest_int("minibatch_size", 4000, 4000), 
             # "train_batch_size": trial.suggest_int("train_batch_size", 1000, 5000), # default 4000
         },
     }
@@ -141,7 +144,7 @@ def run_training():
     asha = ASHAScheduler(
         metric="env_runners/episode_reward_mean",
         mode="max",
-        max_t=50, # trials that survive long enough get stopped at 50 iters
+        max_t=200, # trials that survive long enough get stopped at 50 iters
         grace_period=5, # stop a trial if it is longer than 5 iterations
     )
 

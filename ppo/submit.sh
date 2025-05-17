@@ -8,8 +8,8 @@
 #SBATCH --time=24:00:00   
 
 module purge
-module load Python/3.9.6-GCCcore-11.2.0
-module load CUDA/12.6
+module load Python/3.10.4-GCCcore-11.3.0
+module load CUDA/11.7.0
 module load Boost/1.79.0-GCC-11.3.0
 source $HOME/projects/cage-challenge-4/myenv/bin/activate
 

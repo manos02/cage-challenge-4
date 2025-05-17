@@ -207,14 +207,8 @@ class BlueFlatWrapper(BlueFixedActionWrapper):
         observations = {
             a: self.observation_change(a, observations[a]) for a in self.agents
         }
-
-        global_obs = []
-        for a in observations.values():
-            global_obs.append(a["observations"])    
-        global_obs = np.concatenate(global_obs, axis=0)
+        #print(self.env.environment_controller.state.subnet_name_to_cidr)
         
-        for i in range(5):
-            observations[f"blue_agent_{i}"]["global_observations"] = global_obs
         return observations, info
 
 
@@ -352,14 +346,9 @@ class BlueFlatWrapper(BlueFixedActionWrapper):
         # using masking in Ray
         # just defining the spaces
 
-
-        # Get obs for all agents
-        global_obs = np.concatenate([self._observation_space[a].nvec for a in self.agents])
-
         self._observation_space = {
                 agent: spaces.Dict({"observations": self._observation_space[agent],
                         "action_mask": spaces.MultiDiscrete([2] * len(self.action_mask(agent))),
-                        "global_observations": spaces.MultiDiscrete(global_obs)
                         })
             for agent in self.agents
         }

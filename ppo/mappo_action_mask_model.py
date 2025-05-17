@@ -1,17 +1,28 @@
 from gymnasium.spaces import Dict
-from ray.rllib.models.tf.fcnet import FullyConnectedNetwork
-from ray.rllib.models.tf.tf_modelv2 import TFModelV2
 from ray.rllib.models.torch.torch_modelv2 import TorchModelV2
 from ray.rllib.models.torch.fcnet import FullyConnectedNetwork as TorchFC
 from ray.rllib.utils.framework import try_import_tf, try_import_torch
 from ray.rllib.utils.torch_utils import FLOAT_MIN
-from ray.rllib.models.torch.misc import SlimFC
-from ray.rllib.utils.torch_utils import one_hot as torch_one_hot
-from ray.rllib.policy.view_requirement import ViewRequirement
-from gymnasium.spaces import Box
+from ray.rllib.models.catalog import ModelCatalog
 
 tf1, tf, tfv = try_import_tf()
 torch, nn = try_import_torch()
+
+
+shared_value_model = None
+def get_shared_value_model(obs_space, action_space, config, name):
+    global shared_value_model
+    if shared_value_model is None:
+        shared_value_model = TorchFC(
+            obs_space,
+            action_space,
+            1,            
+            config,
+            name + "_vf",
+        )
+    return shared_value_model
+
+
 
 class TorchActionMaskModelMappo(TorchModelV2, nn.Module):
     """PyTorch version of above TorchActionMaskModel."""
@@ -25,57 +36,74 @@ class TorchActionMaskModelMappo(TorchModelV2, nn.Module):
         name,
         **kwargs,
     ):
-        # Recover the original gym space before Rllib wrap
         orig_space = getattr(obs_space, "original_space", obs_space)
 
-        # print("ORIG SPACE", orig_space)
-
-        agent = orig_space[1]
-        agent_space = orig_space[0][agent]
-
-
-        # print(orig_space[0])
-        # print("agent space", agent_space)
-        
-        # print("ORIG_SPACE:", orig_space["observations"])
-
         assert (
-            isinstance(agent_space, Dict)
-            and "action_mask" in agent_space.spaces
-            and "observations" in agent_space.spaces
+            isinstance(orig_space, Dict)
+            and "action_mask" in orig_space.spaces
+            and "observations" in orig_space.spaces
+            and "global_observations" in orig_space.spaces
         )
-        
+
         TorchModelV2.__init__(
             self, obs_space, action_space, num_outputs, model_config, name, **kwargs
         )
         nn.Module.__init__(self)
 
-        
-        self.internal_model = TorchFC(
-            agent_space["observations"],
+
+
+        '''
+        Uses agent's own obs as input
+        Outputs a probability distribution over possible actions
+        '''
+        self.action_model = TorchFC(
+            orig_space["observations"],
             action_space,
             num_outputs,
             model_config,
-            name + "_internal",
+            name + "_action",
         )
 
-    
+        '''
+        Uses global obs as input
+        Outputs a single value
+        '''
+        # self.value_model = TorchFC(
+        #     orig_space["global_observations"],
+        #     action_space,
+        #     1,
+        #     model_config,
+        #     name + "_value",
+        # )
+
+        self.value_model = get_shared_value_model(
+            orig_space["global_observations"],
+            action_space,
+            model_config,
+            name + "_value",
+        )
+
+        
     def forward(self, input_dict, state, seq_lens):
-        print("INPUT DICT obs", input_dict["obs"])
-        # print("INPUT DICT obs flat", input_dict["obs_flat"])
-        # print(input_dict["state"])
-
-        
-        for agent, d in input_dict["obs"]:
-
-        
-        exit(0)
         '''
         action[b, a] == 1 -> action a is valid in batch_b
         action[b, a] == 0 -> action a is not valid
         '''
+
+        # print("OBS KEYS:", list(input_dict["obs"].keys()))
+        # print('GLOBAL OBS', input_dict["obs"]["global_observations"])
+        # print('GLOBAL OBS', input_dict["obs"]["global_observations"].shape)
+        # print('OBS', input_dict["obs"]["observations"].shape)
+        
+        self.global_obs = input_dict["obs"]["global_observations"]
+
+        # if isinstance(self.global_obs, list):
+        #     print("LIST", self.global_obs)
+        # print("GLOBAL TYPE", self.global_obs.shape)
+        # print("LOCAL TYPE", input_dict["obs"]["observations"].shape)
+
         action_mask = input_dict["obs"]["action_mask"]
-        logits, _ = self.internal_model({"obs": input_dict["obs"]["observations"]})
+        logits, _ = self.action_model({"obs": input_dict["obs"]["observations"]})
         '''
         log(1) == 0 for valid actions
         log(0) == -inf for invalid actions
@@ -84,10 +112,12 @@ class TorchActionMaskModelMappo(TorchModelV2, nn.Module):
         inf_mask = torch.clamp(torch.log(action_mask), min=FLOAT_MIN)
         # For an invalid state perform logits - inf approx -inf
         masked_logits = logits + inf_mask
+
+
         return masked_logits, state
 
-    def value_function(self):
-
+    def value_function(self):    
+        _, _  = self.value_model({"obs": self.global_obs})
+        return self.value_model.value_function()
         
-
-        return self.internal_model.value_function()
+        
