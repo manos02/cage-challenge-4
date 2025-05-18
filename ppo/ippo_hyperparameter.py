@@ -17,10 +17,13 @@ from ippo_action_mask_model import TorchActionMaskModelIppo
 from ray.train import RunConfig
 import ray
 import torch
-import os
+import argparse
 
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+
+
 
 
 ModelCatalog.register_custom_model(
@@ -92,6 +95,7 @@ def build_algo_config():
             batch_mode="complete_episodes",
             num_env_runners=15, # parallel sampling, set 0 for debugging
             num_cpus_per_env_runner=1,
+            num_gpus_per_env_runner=0.0625,
             sample_timeout_s=None, # time for each worker to sample timesteps
         )
         .multi_agent(
@@ -130,8 +134,9 @@ def run_training():
     Build and run the PPO algorithm for a fixed number of iterations, saving models.
     """
 
-    # Connect to the cluster
-    ray.init(address="auto")
+    if CLUSTER:
+        # Connect to the cluster
+        ray.init(address="auto")
 
 
     optuna_search = OptunaSearch(
@@ -147,7 +152,6 @@ def run_training():
         max_t=200, # trials that survive long enough get stopped at 50 iters
         grace_period=5, # stop a trial if it is longer than 5 iterations
     )
-
     
     print("Torch sees:", torch.cuda.device_count(), "GPUs; available:", torch.cuda.is_available())
 
@@ -176,6 +180,28 @@ def run_training():
     # df.to_csv("tune_results.csv", index=False) # save to csv format
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description="Process input parameters for agent training")
+
+    # Add arguments
+    # parser.add_argument(
+    #     '--Method',
+    #     type=str,
+    #     default='IPPO',
+    #     help='The method to be used (default: IPPO)'
+    # )
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--cluster",              
+        action="store_true", 
+        help="Run under SLURM (submit via sbatch)."
+    )
+    args = parser.parse_args()
+    CLUSTER = args.cluster
+    print(CLUSTER)
+
+
     run_training()
 
 """

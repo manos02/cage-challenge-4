@@ -3,7 +3,6 @@ from ray.rllib.models.torch.torch_modelv2 import TorchModelV2
 from ray.rllib.models.torch.fcnet import FullyConnectedNetwork as TorchFC
 from ray.rllib.utils.framework import try_import_tf, try_import_torch
 from ray.rllib.utils.torch_utils import FLOAT_MIN
-from ray.rllib.models.catalog import ModelCatalog
 
 tf1, tf, tfv = try_import_tf()
 torch, nn = try_import_torch()
@@ -23,7 +22,6 @@ def get_shared_value_model(obs_space, action_space, config, name):
     return shared_value_model
 
 
-
 class TorchActionMaskModelMappo(TorchModelV2, nn.Module):
     """PyTorch version of above TorchActionMaskModel."""
 
@@ -32,7 +30,7 @@ class TorchActionMaskModelMappo(TorchModelV2, nn.Module):
         obs_space,
         action_space,
         num_outputs,
-        model_config,
+        model_config,   
         name,
         **kwargs,
     ):
@@ -50,8 +48,6 @@ class TorchActionMaskModelMappo(TorchModelV2, nn.Module):
         )
         nn.Module.__init__(self)
 
-
-
         '''
         Uses agent's own obs as input
         Outputs a probability distribution over possible actions
@@ -68,14 +64,6 @@ class TorchActionMaskModelMappo(TorchModelV2, nn.Module):
         Uses global obs as input
         Outputs a single value
         '''
-        # self.value_model = TorchFC(
-        #     orig_space["global_observations"],
-        #     action_space,
-        #     1,
-        #     model_config,
-        #     name + "_value",
-        # )
-
         self.value_model = get_shared_value_model(
             orig_space["global_observations"],
             action_space,
@@ -85,23 +73,12 @@ class TorchActionMaskModelMappo(TorchModelV2, nn.Module):
 
         
     def forward(self, input_dict, state, seq_lens):
+        # Get global observations
+        self.global_obs = input_dict["obs"]["global_observations"]
         '''
         action[b, a] == 1 -> action a is valid in batch_b
         action[b, a] == 0 -> action a is not valid
         '''
-
-        # print("OBS KEYS:", list(input_dict["obs"].keys()))
-        # print('GLOBAL OBS', input_dict["obs"]["global_observations"])
-        # print('GLOBAL OBS', input_dict["obs"]["global_observations"].shape)
-        # print('OBS', input_dict["obs"]["observations"].shape)
-        
-        self.global_obs = input_dict["obs"]["global_observations"]
-
-        # if isinstance(self.global_obs, list):
-        #     print("LIST", self.global_obs)
-        # print("GLOBAL TYPE", self.global_obs.shape)
-        # print("LOCAL TYPE", input_dict["obs"]["observations"].shape)
-
         action_mask = input_dict["obs"]["action_mask"]
         logits, _ = self.action_model({"obs": input_dict["obs"]["observations"]})
         '''
@@ -118,6 +95,7 @@ class TorchActionMaskModelMappo(TorchModelV2, nn.Module):
 
     def value_function(self):    
         _, _  = self.value_model({"obs": self.global_obs})
+        print(self.value_model.value_function())
         return self.value_model.value_function()
         
         

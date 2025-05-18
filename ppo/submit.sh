@@ -30,4 +30,4 @@ sleep 10
 
 cd $HOME/projects/cage-challenge-4
 
-python ppo/ippo_hyperparameter.py
+python ppo/ippo_hyperparameter.py --cluster
