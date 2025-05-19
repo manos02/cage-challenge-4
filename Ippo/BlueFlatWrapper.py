@@ -16,7 +16,6 @@ import networkx as nx
 
 import functools
 import itertools
-import random
 
 # no changes to the Action Wrapper
 # messages are created in this wrapper
@@ -207,8 +206,7 @@ class BlueFlatWrapper(BlueFixedActionWrapper):
         observations = {
             a: self.observation_change(a, observations[a]) for a in self.agents
         }
-        #print(self.env.environment_controller.state.subnet_name_to_cidr)
-        
+
         return observations, info
 
 
@@ -345,6 +343,10 @@ class BlueFlatWrapper(BlueFixedActionWrapper):
 
         # using masking in Ray
         # just defining the spaces
+
+
+        # Get obs for all agents
+        global_obs = np.concatenate([self._observation_space[a].nvec for a in self.agents])
 
         self._observation_space = {
                 agent: spaces.Dict({"observations": self._observation_space[agent],

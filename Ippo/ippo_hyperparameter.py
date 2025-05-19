@@ -6,7 +6,7 @@ from CybORG import CybORG
 from ray.tune.search.optuna import OptunaSearch
 from CybORG.Agents import SleepAgent, EnterpriseGreenAgent, FiniteStateRedAgent
 from CybORG.Simulator.Scenarios import EnterpriseScenarioGenerator
-from CybORG.Agents.Wrappers.EnterpriseMAE import EnterpriseMAE
+from EnterpriseMAEIppo import EnterpriseMAE
 from ray.tune.schedulers import ASHAScheduler
 from ray.rllib.env import MultiAgentEnv
 from ray.rllib.algorithms.ppo import PPOConfig, PPOTorchPolicy, PPO
@@ -23,9 +23,6 @@ import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
-
-
-
 ModelCatalog.register_custom_model(
     "ippo_model", TorchActionMaskModelIppo
 )
@@ -35,6 +32,7 @@ NUM_AGENTS = 5
 POLICY_MAP: Dict[str, str] = {
     f"blue_agent_{i}": f"Agent{i}" for i in range(NUM_AGENTS)
 }
+
 
 # Environment creator function
 def env_creator_CC4(env_config: dict) -> MultiAgentEnv:
@@ -80,7 +78,6 @@ def build_algo_config():
     }
 
 
-
     config = (
         PPOConfig()
         .framework("torch")
@@ -93,9 +90,9 @@ def build_algo_config():
         )
         .env_runners(
             batch_mode="complete_episodes",
-            num_env_runners=15, # parallel sampling, set 0 for debugging
+            num_env_runners=30, # parallel sampling, set 0 for debugging
             num_cpus_per_env_runner=1,
-            num_gpus_per_env_runner=0.0625,
+            # num_gpus_per_env_runner=1/16,
             sample_timeout_s=None, # time for each worker to sample timesteps
         )
         .multi_agent(
@@ -166,7 +163,7 @@ def run_training():
             num_samples=1, # how many Optuna trials. Each time with different sampling 
         ),
         run_config=RunConfig(
-            storage_path="~/projects/cage-challenge-4/ray_results",
+            storage_path="~/projects/cage-challenge-4/Ippo/ray_results",
         )
     )
 
@@ -199,8 +196,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     CLUSTER = args.cluster
-    print(CLUSTER)
-
+    
 
     run_training()
 

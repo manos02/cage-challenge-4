@@ -6,7 +6,6 @@ from CybORG import CybORG
 from ray.tune.search.optuna import OptunaSearch
 from CybORG.Agents import SleepAgent, EnterpriseGreenAgent, FiniteStateRedAgent
 from CybORG.Simulator.Scenarios import EnterpriseScenarioGenerator
-from CybORG.Agents.Wrappers.EnterpriseMAE import EnterpriseMAE
 from ray.tune.schedulers import ASHAScheduler
 from ray.rllib.env import MultiAgentEnv
 from ray.rllib.algorithms.ppo import PPOConfig, PPOTorchPolicy, PPO
@@ -16,6 +15,7 @@ from ray.rllib.models import ModelCatalog
 from mappo_action_mask_model import TorchActionMaskModelMappo
 from ray.train import RunConfig
 import numpy as np
+from EnterpriseMAEMappo import EnterpriseMAE
 
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -87,7 +87,6 @@ def build_algo_config():
     }
 
     
-
     config = (
         PPOConfig()
         .framework("torch")
@@ -162,7 +161,7 @@ def run_training():
             num_samples=1, # how many Optuna trials. Each time with different sampling 
         ),
         run_config=RunConfig(
-            storage_path="~/projects/cage-challenge-4/ray_results",
+            storage_path="~/projects/cage-challenge-4/Mappo/ray_results",
         )
     )
 

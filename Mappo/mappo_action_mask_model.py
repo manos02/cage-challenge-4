@@ -95,7 +95,6 @@ class TorchActionMaskModelMappo(TorchModelV2, nn.Module):
 
     def value_function(self):    
         _, _  = self.value_model({"obs": self.global_obs})
-        print(self.value_model.value_function())
         return self.value_model.value_function()
         
         
