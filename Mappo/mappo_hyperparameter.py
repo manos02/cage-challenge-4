@@ -15,7 +15,9 @@ from ray.rllib.models import ModelCatalog
 from mappo_action_mask_model import TorchActionMaskModelMappo
 from ray.train import RunConfig
 import numpy as np
+import ray
 from EnterpriseMAEMappo import EnterpriseMAE
+from helper import parse_args
 
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -99,7 +101,7 @@ def build_algo_config():
         )  # Use if GPUs are available
         .env_runners(
             batch_mode="complete_episodes",
-            num_env_runners=0, # parallel sampling, set 0 for debugging
+            num_env_runners=31, # parallel sampling, set 0 for debugging
             num_cpus_per_env_runner=1,
             sample_timeout_s=None, # time for each worker to sample timesteps
             enable_connectors=False
@@ -127,13 +129,18 @@ def optuna_space(trial):
         "training": {
             # "lr": trial.suggest_float("lr", 1e-4, 1e-2, log=True), # default 0.01
             # "clip_param": trial.suggest_float("clip_param", 0.1, 0.3), # default 
-            # "train_batch_size": trial.suggest_int("train_batch_size", 1000000, 1000001), # default 4000
-            # "minibatch_size": trial.suggest_int("minibatch_size", 32768, 32769), 
-            "train_batch_size": trial.suggest_int("train_batch_size", 128, 128), # default 4000
+            "train_batch_size": trial.suggest_int("train_batch_size", 100000, 100000), # default 4000
+            "minibatch_size": trial.suggest_int("minibatch_size", 4000, 4000), 
+            # "train_batch_size": trial.suggest_int("train_batch_size", 128, 128), # default 4000
         },
     }
 
 def run_training():
+
+    if CLUSTER:
+        # Connect to the cluster
+        ray.init(address="auto")
+
     """
     Build and run the PPO algorithm for a fixed number of iterations, saving models.
     """
@@ -147,7 +154,7 @@ def run_training():
     asha = ASHAScheduler(
         metric="env_runners/episode_reward_mean",
         mode="max",
-        max_t=50, # trials that survive long enough get stopped at 50 iters
+        max_t=200, # trials that survive long enough get stopped at 50 iters
         grace_period=5, # stop a trial if it is longer than 5 iterations
     )
     
@@ -175,6 +182,8 @@ def run_training():
     # df.to_csv("tune_results.csv", index=False) # save to csv format
 
 if __name__ == "__main__":
+    
+    CLUSTER = parse_args()
     run_training()
 
 """

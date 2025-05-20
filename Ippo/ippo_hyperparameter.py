@@ -17,7 +17,7 @@ from ippo_action_mask_model import TorchActionMaskModelIppo
 from ray.train import RunConfig
 import ray
 import torch
-import argparse
+from helper import parse_args
 
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -81,18 +81,17 @@ def build_algo_config():
     config = (
         PPOConfig()
         .framework("torch")
-        # .debugging(log_level='INFO') 
+        .debugging(log_level='DEBUG') 
         .environment(
             env="CC4",
         )
-        .resources(
-            num_gpus=1, # Use if GPUs are available
-        )
+        # .resources(
+        #     num_gpus=1, # Use if GPUs are available
+        # )
         .env_runners(
             batch_mode="complete_episodes",
-            num_env_runners=30, # parallel sampling, set 0 for debugging
+            num_env_runners=31, # parallel sampling, set 0 for debugging
             num_cpus_per_env_runner=1,
-            # num_gpus_per_env_runner=1/16,
             sample_timeout_s=None, # time for each worker to sample timesteps
         )
         .multi_agent(
@@ -105,9 +104,9 @@ def build_algo_config():
         .experimental(
             _disable_preprocessor_api=True,  
         )
-        .learners(
-            num_gpus_per_learner=1
-        )
+        # .learners(
+        #     num_gpus_per_learner=1
+        # )
     )
     return config
 
@@ -130,7 +129,6 @@ def run_training():
     """
     Build and run the PPO algorithm for a fixed number of iterations, saving models.
     """
-
     if CLUSTER:
         # Connect to the cluster
         ray.init(address="auto")
@@ -177,27 +175,8 @@ def run_training():
     # df.to_csv("tune_results.csv", index=False) # save to csv format
 
 if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser(description="Process input parameters for agent training")
-
-    # Add arguments
-    # parser.add_argument(
-    #     '--Method',
-    #     type=str,
-    #     default='IPPO',
-    #     help='The method to be used (default: IPPO)'
-    # )
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--cluster",              
-        action="store_true", 
-        help="Run under SLURM (submit via sbatch)."
-    )
-    args = parser.parse_args()
-    CLUSTER = args.cluster
     
-
+    CLUSTER = parse_args()  
     run_training()
 
 """
