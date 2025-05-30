@@ -4,6 +4,7 @@ ray_results
 
 *.out
 
+*.csv
 
 *.*~
 __pycache__/

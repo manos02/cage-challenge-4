@@ -3,7 +3,7 @@
 #SBATCH --partition=gpu
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=32
-#SBATCH --mem=64G
+#SBATCH --mem=48G
 #SBATCH --gres=gpu:1
 #SBATCH --time=36:00:00
 
@@ -30,6 +30,6 @@ sleep 10
 
 cd $HOME/projects/cage-challenge-4
 
-python Mappo/mappo_hyperparameter.py
+python Mappo/mappo_hyperparameter.py --cluster
 
 

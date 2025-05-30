@@ -81,13 +81,13 @@ def build_algo_config():
     config = (
         PPOConfig()
         .framework("torch")
-        .debugging(log_level='DEBUG') 
+        # .debugging(log_level='DEBUG') 
         .environment(
             env="CC4",
         )
-        # .resources(
-        #     num_gpus=1, # Use if GPUs are available
-        # )
+        .resources(
+            num_gpus=1, # Use if GPUs are available
+        )
         .env_runners(
             batch_mode="complete_episodes",
             num_env_runners=31, # parallel sampling, set 0 for debugging
@@ -140,12 +140,12 @@ def run_training():
         space=optuna_space,
     )
 
-    # Performs early stopping for underperforming trials. Optimizes episode_rewarid_mean
+    # Performs early stopping for underperforming trials. Optimizes episode_reward_mean
     asha = ASHAScheduler(
         metric="env_runners/episode_reward_mean",
         mode="max",
         max_t=200, # trials that survive long enough get stopped at 50 iters
-        grace_period=5, # stop a trial if it is longer than 5 iterations
+        grace_period=5, # can only stop a trial if it is longer than 5 iterations
     )
     
     print("Torch sees:", torch.cuda.device_count(), "GPUs; available:", torch.cuda.is_available())
