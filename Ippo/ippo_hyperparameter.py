@@ -104,9 +104,6 @@ def build_algo_config():
         .experimental(
             _disable_preprocessor_api=True,  
         )
-        # .learners(
-        #     num_gpus_per_learner=1
-        # )
     )
     return config
 

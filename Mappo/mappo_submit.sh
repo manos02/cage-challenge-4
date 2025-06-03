@@ -1,11 +1,12 @@
 #!/bin/bash
-#SBATCH --job-name=ippo_ray
+#SBATCH --job-name=mappo_ray
 #SBATCH --partition=gpu
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=32
-#SBATCH --mem=64G
+#SBATCH --mem=38G
 #SBATCH --gres=gpu:1
-#SBATCH --time=55:00:00   
+#SBATCH --time=24:00:00
+#SBATCH --output=R-%x.%j.out
 
 module purge
 module load Python/3.10.4-GCCcore-11.3.0
@@ -30,4 +31,6 @@ sleep 10
 
 cd $HOME/projects/cage-challenge-4
 
-python Ippo/ippo_hyperparameter.py --cluster
+python Mappo/mappo_hyperparameter.py --cluster
+
+
