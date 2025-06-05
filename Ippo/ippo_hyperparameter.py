@@ -18,6 +18,7 @@ from ray.train import RunConfig
 import ray
 import torch
 from helper import parse_args
+from optuna.samplers import TPESampler
 
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -99,7 +100,8 @@ def build_algo_config():
             policy_mapping_fn=policy_mapper,
         )
         .training(
-            model={"custom_model": "ippo_model"}
+            model={"custom_model": "ippo_model"},
+            
         )
         .experimental(
             _disable_preprocessor_api=True,  
@@ -113,12 +115,34 @@ def optuna_space(trial):
     trial.suggest samples one value from the interval provided
     """
     return {
+        '''        
+        Default PPO values
+        lr_schedule = None
+        lr = 5e-5
+        rollout_fragment_length = "auto"
+        train_batch_size = 4000
+        use_critic = True
+        use_gae = True
+        num_epochs = 30
+        minibatch_size = 128
+        shuffle_batch_per_epoch = True
+        lambda_ = 1.0
+        use_kl_loss = True
+        kl_coeff = 0.2
+        kl_target = 0.01
+        vf_loss_coeff = 1.0
+        entropy_coeff = 0.0
+        entropy_coeff_schedule = None
+        clip_param = 0.3
+        vf_clip_param = 10.0
+        grad_clip = None
+        '''
+
         "training": {
-            # "lr": trial.suggest_float("lr", 1e-4, 1e-2, log=True), # default 0.01
-            # "clip_param": trial.suggest_float("clip_param", 0.1, 0.3), # default 
-            "train_batch_size": trial.suggest_int("train_batch_size", 100000, 100000), # default 4000
-            "minibatch_size": trial.suggest_int("minibatch_size", 4000, 4000), 
-            # "train_batch_size": trial.suggest_int("train_batch_size", 1000, 5000), # default 4000
+            "lr": trial.suggest_float("lr", 1e-5, 3e-4, log=True), 
+            "clip_param": trial.suggest_float("clip_param", 0.1, 0.3),
+            "train_batch_size": trial.suggest_int("train_batch_size", 10000, 100000), 
+            "minibatch_size":   trial.suggest_int("minibatch_size", 512, 4096, log=True),
         },
     }
 
@@ -135,13 +159,14 @@ def run_training():
         metric="env_runners/episode_reward_mean", # Training result objective
         mode="max", # Maximize the objective
         space=optuna_space,
+        sampler=TPESampler(multivariate=True, group=True),
     )
 
     # Performs early stopping for underperforming trials. Optimizes episode_reward_mean
     asha = ASHAScheduler(
         metric="env_runners/episode_reward_mean",
         mode="max",
-        max_t=200, # trials that survive long enough get stopped at 50 iters
+        max_t=100, # trials that survive long enough get stopped at 100 iters
         grace_period=5, # can only stop a trial if it is longer than 5 iterations
     )
     
@@ -155,7 +180,7 @@ def run_training():
         tune_config=TuneConfig(
             search_alg=optuna_search,
             scheduler=asha,
-            num_samples=1, # how many Optuna trials. Each time with different sampling 
+            num_samples=10, # how many Optuna trials. Each time with different sampling 
         ),
         run_config=RunConfig(
             storage_path="~/projects/cage-challenge-4/Ippo/ray_results",
@@ -168,8 +193,8 @@ def run_training():
     print("Best config:", best_res.config)
     print("Best res metrics:", best_res.metrics)
 
-    # df = result_grid.get_dataframe() # get a dataframe
-    # df.to_csv("tune_results.csv", index=False) # save to csv format
+    df = result_grid.get_dataframe() # get a dataframe
+    df.to_csv("tune_results.csv", index=False) # save to csv format
 
 if __name__ == "__main__":
     

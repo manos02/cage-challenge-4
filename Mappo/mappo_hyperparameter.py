@@ -112,7 +112,7 @@ def build_algo_config():
             observation_fn=central_critic_observer,
         )
         .training(
-            model={"custom_model": "mappo_model"}
+            model={"custom_model": "mappo_model"},
         )
         .experimental(
             _disable_preprocessor_api=True,  

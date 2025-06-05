@@ -1,5 +1,0 @@
-for 1000-4000 batch size:
-
-1 runner: 247
-15 runners: 136
-30 runners: 195
