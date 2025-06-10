@@ -5,7 +5,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 # Load the csv files into a list of 1d array
-csv_files = sorted(glob.glob("*.csv"))
+csv_files = sorted(glob.glob("baseline_results/*.csv"))
 data_list = [pd.read_csv(f).iloc[:,2].values for f in csv_files]
 labels = [os.path.splitext(os.path.basename(f))[0] for f in csv_files]
 
