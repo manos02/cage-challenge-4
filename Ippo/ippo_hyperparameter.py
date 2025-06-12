@@ -141,8 +141,8 @@ def optuna_space(trial):
         "training": {
             "lr": trial.suggest_float("lr", 1e-5, 3e-4, log=True), 
             "clip_param": trial.suggest_float("clip_param", 0.1, 0.3),
-            "train_batch_size": trial.suggest_int("train_batch_size", 10000, 100000), 
-            "minibatch_size":   trial.suggest_int("minibatch_size", 512, 4096, log=True),
+            "train_batch_size": trial.suggest_int("train_batch_size", 100000, 200000), 
+            "minibatch_size":   trial.suggest_int("minibatch_size", 2048, 8192, log=True),
         },
     }
 
@@ -180,7 +180,7 @@ def run_training():
         tune_config=TuneConfig(
             search_alg=optuna_search,
             scheduler=asha,
-            num_samples=10, # how many Optuna trials. Each time with different sampling 
+            num_samples=5, # how many Optuna trials. Each time with different sampling 
         ),
         run_config=RunConfig(
             storage_path="~/projects/cage-challenge-4/Ippo/ray_results",
@@ -189,12 +189,12 @@ def run_training():
 
     result_grid = tuner.fit()
 
-    best_res = result_grid.get_best_result()
+    best_res = result_grid.get_best_result("env_runners/episode_reward_mean")
     print("Best config:", best_res.config)
     print("Best res metrics:", best_res.metrics)
 
-    df = result_grid.get_dataframe() # get a dataframe
-    df.to_csv("tune_results.csv", index=False) # save to csv format
+    # df = result_grid.get_dataframe() # get a dataframe
+    # df.to_csv("tune_results.csv", index=False) # save to csv format
 
 if __name__ == "__main__":
     

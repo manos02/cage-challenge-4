@@ -37,7 +37,7 @@ sns.lineplot(
     lw=2,            # line‐width
 )
 
-plt.xlabel('Training Episodes $(\\times10^5)$', fontsize=16)
+plt.xlabel('Timesteps $(\\times10^5)$', fontsize=16)
 plt.ylabel('Average return', fontsize=16)
 plt.tight_layout()
 plt.savefig("myplot.png")

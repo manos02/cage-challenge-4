@@ -127,11 +127,10 @@ def optuna_space(trial):
     """
     return {
         "training": {
-            # "lr": trial.suggest_float("lr", 1e-4, 1e-2, log=True), # default 0.01
-            # "clip_param": trial.suggest_float("clip_param", 0.1, 0.3), # default 
-            "train_batch_size": trial.suggest_int("train_batch_size", 100000, 100000), # default 4000
-            "minibatch_size": trial.suggest_int("minibatch_size", 4000, 4000), 
-            # "train_batch_size": trial.suggest_int("train_batch_size", 128, 128), # default 4000
+            "lr": trial.suggest_float("lr", 1e-5, 3e-4, log=True), 
+            "clip_param": trial.suggest_float("clip_param", 0.1, 0.3),
+            "train_batch_size": trial.suggest_int("train_batch_size", 100000, 200000), 
+            "minibatch_size":   trial.suggest_int("minibatch_size", 2048, 8192, log=True),
         },
     }
 
@@ -165,7 +164,7 @@ def run_training():
         tune_config=TuneConfig(
             search_alg=optuna_search,
             scheduler=asha,
-            num_samples=1, # how many Optuna trials. Each time with different sampling 
+            num_samples=5, # how many Optuna trials. Each time with different sampling 
         ),
         run_config=RunConfig(
             storage_path="~/projects/cage-challenge-4/Mappo/ray_results",

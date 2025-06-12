@@ -5,8 +5,8 @@
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=32G
 #SBATCH --gres=gpu:1
-#SBATCH --time=30:00:00
-#SBATCH --output=Hyper_IPPO-%x.%j.out
+#SBATCH --time=24:00:00
+#SBATCH --output=HMARL-%x.%j.out
 
 module purge
 module load Python/3.10.4-GCCcore-11.3.0
@@ -31,4 +31,4 @@ sleep 10
 
 cd $HOME/projects/cage-challenge-4
 
-python Ippo/ippo_hyperparameter.py --cluster
+python Hmarl/train_subpolicies.py --cluster
