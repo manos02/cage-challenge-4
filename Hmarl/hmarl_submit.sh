@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=ippo_ray
+#SBATCH --job-name=Hppo_ray
 #SBATCH --partition=gpu
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=32

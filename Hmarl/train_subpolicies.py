@@ -1,29 +1,25 @@
 
-from typing import Dict
 from rich import print
-from ray.tune import Tuner, TuneConfig
 from CybORG import CybORG
-from ray.tune.search.optuna import OptunaSearch
 from CybORG.Agents import SleepAgent, EnterpriseGreenAgent, FiniteStateRedAgent
 from CybORG.Simulator.Scenarios import EnterpriseScenarioGenerator
 from EnterpriseMAEHmarl import EnterpriseMAE
-from ray.tune.schedulers import ASHAScheduler
 from ray.rllib.env import MultiAgentEnv
-from ray.rllib.algorithms.ppo import PPOConfig, PPOTorchPolicy, PPO
+from ray.rllib.algorithms.ppo import PPOConfig, PPOTorchPolicy
 from ray.rllib.policy.policy import PolicySpec
 from ray.tune import register_env
 from ray.rllib.models import ModelCatalog
 from hmarl_action_mask_model import TorchActionMaskModelHppo
-from ray.train import RunConfig
 import ray
 import numpy as np
 from helper import parse_args
-from optuna.samplers import TPESampler
 import gymnasium
 
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
+
+# From https://github.com/adityavs14/Hierarchical-MARL/blob/main/h-marl-3policy/subpolicies/train_subpolicies.py
 
 ModelCatalog.register_custom_model(
     "hmarl_model", TorchActionMaskModelHppo
