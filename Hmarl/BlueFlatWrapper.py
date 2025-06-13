@@ -84,12 +84,7 @@ class BlueFlatWrapper(BlueFixedActionWrapper):
         self.initialize_action_indexes()
 
         # initialize history for malicious files
-        if USE_FILES == True:
-            self.files = {}
-            for a in self.agents:
-                self.files[a] = {}
-                for subnet in self.subnets(a):
-                    self.files[a][subnet] = [0] * MAX_HOSTS
+        self._init_history_malicious_files()
 
         # initialize history for suspicious host events, i.e., processes and connections
         self.suspicious_processes = {}
@@ -104,14 +99,7 @@ class BlueFlatWrapper(BlueFixedActionWrapper):
                 self.suspicious_connections[a][subnet] = [False] * MAX_HOSTS
 
         # initialize history of hosts where decoy access originated from
-        if USE_DECOYS == True:
-            self.decoy_access_from = {}
-            self.decoy_msg = {}
-            for a in self.agents:
-                self.decoy_access_from[a] = {}
-                self.decoy_msg[a] = set()
-                for subnet in self.subnets(a):
-                    self.decoy_access_from[a][subnet] = [False] * MAX_HOSTS
+        self._init_history_hosts_decoys()
 
         # will use the subnet info for decoys/messages
         subnet_names = sorted(list(self.env.environment_controller.state.subnet_name_to_cidr.keys()))
@@ -167,12 +155,9 @@ class BlueFlatWrapper(BlueFixedActionWrapper):
         self.subnet_names = [name.lower() for name in subnet_names]
 
         # initialize history for malicious files
-        if USE_FILES == True:
-            self.files = {}
-            for a in self.agents:
-                self.files[a] = {}
-                for subnet in self.subnets(a):
-                    self.files[a][subnet] = [0] * MAX_HOSTS
+        self._init_history_malicious_files()
+
+
 
         # initialize history for suspicious host events, i.e., processes and connections
         self.suspicious_processes = {}
@@ -187,14 +172,7 @@ class BlueFlatWrapper(BlueFixedActionWrapper):
                 self.suspicious_connections[a][subnet] = [False] * MAX_HOSTS
 
         # each agent marks hosts (from its own subnet) that accessed decoys
-        if USE_DECOYS == True:
-            self.decoy_access_from = {}
-            self.decoy_msg = {}
-            for a in self.agents:
-                self.decoy_access_from[a] = {}
-                self.decoy_msg[a] = set()
-                for subnet in self.subnets(a):
-                    self.decoy_access_from[a][subnet] = [False] * MAX_HOSTS
+        self._init_history_hosts_decoys()
 
 
         # metrics reset
@@ -1075,6 +1053,28 @@ class BlueFlatWrapper(BlueFixedActionWrapper):
                         self.decoy_msg[agent_name].add((subnet_index, i))
                         
                     break
+
+    def _init_history_malicious_files(self):
+        if USE_FILES == True:
+            self.files = {}
+            for a in self.agents:
+                self.files[a] = {}
+                for subnet in self.subnets(a):
+                    self.files[a][subnet] = [0] * MAX_HOSTS
+
+
+
+    def _init_history_hosts_decoys(self):
+        if USE_DECOYS == True:
+            self.decoy_access_from = {}
+            self.decoy_msg = {}
+            for a in self.agents:
+                self.decoy_access_from[a] = {}
+                self.decoy_msg[a] = set()
+                for subnet in self.subnets(a):
+                    self.decoy_access_from[a][subnet] = [False] * MAX_HOSTS
+
+
 
     @functools.lru_cache(maxsize=None)
     def observation_space(self, agent_name: str) -> Space:

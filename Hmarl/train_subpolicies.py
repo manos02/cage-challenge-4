@@ -14,12 +14,13 @@ import ray
 import numpy as np
 from helper import parse_args
 import gymnasium
+from ray.rllib.utils.annotations import override
 
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
-# From https://github.com/adityavs14/Hierarchical-MARL/blob/main/h-marl-3policy/subpolicies/train_subpolicies.py
+# Based on https://github.com/adityavs14/Hierarchical-MARL/blob/main/h-marl-3policy/subpolicies/train_subpolicies.py
 
 ModelCatalog.register_custom_model(
     "hmarl_model", TorchActionMaskModelHppo
@@ -35,16 +36,14 @@ class CCPPOTorchPolicy(PPOTorchPolicy):
     def handle_extra_ticks(self, postprocessed_batch):
         rewards = None
 
-        # shifting master rewards by -1
-        if "id" not in postprocessed_batch["obs"]:
+        # If a sub-policy or the len of rewards is only 1 value
+        if "id" not in postprocessed_batch["obs"] or "rewards" not in postprocessed_batch or len(postprocessed_batch["rewards"]) <= 1:
             return postprocessed_batch
 
-        if "rewards" not in postprocessed_batch:
-            return postprocessed_batch
-
-        if len(postprocessed_batch["rewards"]) <= 1:
-            return postprocessed_batch
-
+        '''
+        Shifting master rewards by -1, only master policy has an id
+        This happens for correct reward alignment, since some actions take several ticks
+        '''
         rewards = postprocessed_batch["rewards"][1:]
         rewards = np.concatenate((rewards,[0]))
         postprocessed_batch["rewards"] = rewards
@@ -52,10 +51,11 @@ class CCPPOTorchPolicy(PPOTorchPolicy):
         return postprocessed_batch
 
 
-    # @override(PPOTorchPolicy)
+    @override(PPOTorchPolicy)
     def postprocess_trajectory(
         self, sample_batch, other_agent_batches=None, episode=None
     ):
+        
         # handle extra ticks first, update rewards
         sample_batch = self.handle_extra_ticks(sample_batch)
 
@@ -158,7 +158,7 @@ def build_algo_config():
         )
         .training(
             model={"custom_model": "hmarl_model"},
-            train_batch_size=100000,
+            train_batch_size=100000, # NOTE: 1000 for quick testing, normally 100 000
             minibatch_size=4000
         )
         .experimental(
