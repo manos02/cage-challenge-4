@@ -1,0 +1,32 @@
+
+Actions for Blue Agents:
+- Monitor (Collection of info about malicious activity on the network)
+- Analyse (Collection of further info on a specific host)
+- DeployDecoy (Setup of a decoy on a specific host)
+- Remove (Attempt to remove a red agent from a host)
+- Restore (Restore a network to a good known state)
+- BlockTraffic (Block traffic to and from a specific zone)
+- AllowTraffic (Allow traffic to and from a specific zone)
+
+
+Based on https://arxiv.org/abs/2410.17351
+
+HMARL design:
+
+Split the action set A into a small list of disjoint "meta-actions" 
+    1. Investigate all hosts in a zone (Analyse or DeployDecoy)
+    2. Recover a host that shows indicate of compromise (Remove or Restore)
+
+observation  →  master chooses c  →  ψ_c picks primitive action  →  env step
+
+Trainining (H-MARL META):
+    Phase 1. Train sub-policies first: fix the master policy with the following rule:
+        - if Indication Of Compromise (IOC) in the zone -> Recover else Investigate
+        - Train each subpolicy with PPO
+
+    Phase 2. Freeze all subpolicies and train Master policy with PPO
+
+Trainining (H-MARL EXPERT):
+    Phase 1. Same as H-MARL META
+    Phase 2. Deterministic rule (No training): If there is IOC, then Recover  
+
