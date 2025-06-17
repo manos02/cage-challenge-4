@@ -189,7 +189,11 @@ def run_training():
 
     result_grid = tuner.fit()
 
-    best_res = result_grid.get_best_result("env_runners/episode_reward_mean")
+    best_res = result_grid.get_best_result(
+        metric="env_runners/episode_reward_mean",
+        mode="max",
+    )
+    
     print("Best config:", best_res.config)
     print("Best res metrics:", best_res.metrics)
 

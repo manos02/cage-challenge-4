@@ -42,12 +42,12 @@ MAX_HOSTS = MAX_USER_HOSTS + MAX_SERVER_HOSTS
 subnets_list_blue = ['public_access_zone_subnet', 'operational_zone_a_subnet', 'operational_zone_b_subnet', 'restricted_zone_a_subnet', 'restricted_zone_b_subnet', 'admin_network_subnet', 'office_network_subnet']
 NUM_RED_AGENTS = 6
 
-USE_BLOCK = False 
+USE_BLOCK = False # if allow/block traffic actions are legal
 USE_FILES = True
 USE_DECOYS= True
 USE_MESSAGES = True
 
-HITL = True # expert knowledge enabled
+HITL = True # expert knowledge enabled, based on IOC evicende
 FULL_MASK = True
 COMPUTE_METRICS = False # just for evaluation, not training
 
@@ -81,6 +81,8 @@ class BlueFlatWrapper(BlueFixedActionWrapper):
         self._short_obs_space, self._long_obs_space = self._get_init_obs_spaces()
         self.comms_policies = self._build_comms_policy()
         self.policy = {}
+
+        # precompute action indexes
         self.initialize_action_indexes()
 
         # initialize history for malicious files
@@ -156,8 +158,6 @@ class BlueFlatWrapper(BlueFixedActionWrapper):
 
         # initialize history for malicious files
         self._init_history_malicious_files()
-
-
 
         # initialize history for suspicious host events, i.e., processes and connections
         self.suspicious_processes = {}
@@ -476,19 +476,13 @@ class BlueFlatWrapper(BlueFixedActionWrapper):
         self.allow_traffic_indexes = {
             a: self.get_subnet_action_indexes(a, "AllowTraffic") for a in self.agents
         }
-        
-        #self.decoys = {
-        #    a: self.get_action_indexes(a, "Decoy") for a in self.agents
-        #}
-
+    
         self.decoy_indexes = {
-            #a: self.get_subnet_action_indexes(a, "Decoy") for a in self.agents
             a: self.get_action_indexes(a, "Decoy") for a in self.agents
         }
 
         self.analyse_indexes = {
             a: self.get_action_indexes(a, "Analyse") for a in self.agents
-            # a: self.get_subnet_action_indexes(a, "Analyse") for a in self.agents
         }
 
     

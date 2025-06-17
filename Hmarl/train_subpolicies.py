@@ -14,7 +14,7 @@ import ray
 import numpy as np
 from helper import parse_args
 import gymnasium
-from ray.rllib.utils.annotations import override
+# from ray.rllib.utils.annotations import override
 
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -26,43 +26,43 @@ ModelCatalog.register_custom_model(
     "hmarl_model", TorchActionMaskModelHppo
 )
 
-class CCPPOTorchPolicy(PPOTorchPolicy):
-    def __init__(self, observation_space, action_space, config):
-        PPOTorchPolicy.__init__(self, observation_space, action_space, config)
-        self.config = config
-        # just in case we are interested, the policy if is in self.config["__policy_id"]
+# class CCPPOTorchPolicy(PPOTorchPolicy):
+#     def __init__(self, observation_space, action_space, config):
+#         PPOTorchPolicy.__init__(self, observation_space, action_space, config)
+#         self.config = config
+#         # just in case we are interested, the policy if is in self.config["__policy_id"]
 
 
-    def handle_extra_ticks(self, postprocessed_batch):
-        rewards = None
+#     def handle_extra_ticks(self, postprocessed_batch):
+#         rewards = None
 
-        # If a sub-policy or the len of rewards is only 1 value
-        if "id" not in postprocessed_batch["obs"] or "rewards" not in postprocessed_batch or len(postprocessed_batch["rewards"]) <= 1:
-            return postprocessed_batch
+#         # If a sub-policy or the len of rewards is only 1 value
+#         if "id" not in postprocessed_batch["obs"] or "rewards" not in postprocessed_batch or len(postprocessed_batch["rewards"]) <= 1:
+#             return postprocessed_batch
 
-        '''
-        Shifting master rewards by -1, only master policy has an id
-        This happens for correct reward alignment, since some actions take several ticks
-        '''
-        rewards = postprocessed_batch["rewards"][1:]
-        rewards = np.concatenate((rewards,[0]))
-        postprocessed_batch["rewards"] = rewards
+#         '''
+#         Shifting master rewards by -1, only master policy has an id
+#         This happens for correct reward alignment, since some actions take several ticks
+#         '''
+#         rewards = postprocessed_batch["rewards"][1:]
+#         rewards = np.concatenate((rewards,[0]))
+#         postprocessed_batch["rewards"] = rewards
 
-        return postprocessed_batch
+#         return postprocessed_batch
 
 
-    @override(PPOTorchPolicy)
-    def postprocess_trajectory(
-        self, sample_batch, other_agent_batches=None, episode=None
-    ):
+#     @override(PPOTorchPolicy)
+#     def postprocess_trajectory(
+#         self, sample_batch, other_agent_batches=None, episode=None
+#     ):
         
-        # handle extra ticks first, update rewards
-        sample_batch = self.handle_extra_ticks(sample_batch)
+#         # handle extra ticks first, update rewards
+#         sample_batch = self.handle_extra_ticks(sample_batch)
 
-        # continue with the default postprocessing (i.e., computing advantages)
-        return super().postprocess_trajectory(
-            sample_batch, other_agent_batches, episode
-        )
+#         # continue with the default postprocessing (i.e., computing advantages)
+#         return super().postprocess_trajectory(
+#             sample_batch, other_agent_batches, episode
+#         )
 
 # Number of blue agents and mapping to policy IDs
 NUM_AGENTS = 5
@@ -176,7 +176,7 @@ if __name__ == "__main__":
     CLUSTER = parse_args()  
     algo = build_algo_config()
 
-    if CLUSTER:
+    if CLUSTER and not ray.is_initialized():
         # Connect to the cluster
         ray.init(address="auto")
 
