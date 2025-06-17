@@ -9,11 +9,15 @@ from ray.rllib.algorithms.ppo import PPOConfig, PPOTorchPolicy
 from ray.rllib.policy.policy import PolicySpec
 from ray.tune import register_env
 from ray.rllib.models import ModelCatalog
+from ray.rllib.algorithms.ppo import PPOConfig, PPOTorchPolicy, PPO
 from hmarl_action_mask_model import TorchActionMaskModelHppo
 import ray
+from ray.train import RunConfig
+from ray.tune import Tuner, TuneConfig
 import numpy as np
 from helper import parse_args
 import gymnasium
+
 # from ray.rllib.utils.annotations import override
 
 import warnings
@@ -166,26 +170,32 @@ def build_algo_config():
         )
     )
 
-    config = config.build()
     return config
 
-
-
-if __name__ == "__main__":
-    
-    CLUSTER = parse_args()  
-    algo = build_algo_config()
-
+def run_training():
     if CLUSTER and not ray.is_initialized():
         # Connect to the cluster
         ray.init(address="auto")
 
-    for i in range(50):
-        iteration = i # for restore, adjust iter, overwise you will  overwrite old models, e.g.  i + 156
-        train_info = algo.train()
-        print("\nIteration:", i, train_info)
-        # model_dir_crt = os.path.join(model_dir, "iter_"+str(iteration))
-        # print("\nSaving model in:", model_dir_crt)
-        # algo.save(model_dir_crt)
 
-    algo.save("results")
+    config = build_algo_config()
+
+    tuner = Tuner(
+        PPO,                              
+        param_space=config.to_dict(),
+        tune_config=TuneConfig(
+            num_samples=1, # how many Optuna trials. Each time with different sampling 
+        ),
+        run_config=RunConfig(
+            storage_path="~/projects/cage-challenge-4/Hmarl/ray_results",
+            stop={"training_iteration": 200},
+        ),
+    )
+
+    result_grid = tuner.fit()
+
+
+if __name__ == "__main__":
+    
+    CLUSTER = parse_args()      
+    run_training()
