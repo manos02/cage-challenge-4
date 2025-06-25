@@ -13,7 +13,32 @@ def parse_args():
         action="store_true", 
         help="Run under SLURM (submit via sbatch)."
     )
-    args = parser.parse_args()
-    cluster = args.cluster
+    parser.add_argument("--no-optuna", action="store_true", help="Disable Optuna tuning and use fixed hyperparams")
 
-    return cluster
+    # Optional fixed hyperparameters
+    parser.add_argument(
+        "--lr",
+        type=float,
+        default=None,
+        help="Learning rate (e.g., 5e-5)"
+    )
+    parser.add_argument(
+        "--clip-param",
+        type=float,
+        default=None,
+        help="PPO clipping ratio (e.g., 0.2)"
+    )
+    parser.add_argument(
+        "--train-batch-size",
+        type=int,
+        default=None,
+        help="Total training batch size (e.g., 150000)"
+    )
+    parser.add_argument(
+        "--minibatch-size",
+        type=int,
+        default=None,
+        help="Minibatch size (e.g., 4096)"
+    )
+
+    return parser.parse_args()

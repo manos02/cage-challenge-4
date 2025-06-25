@@ -146,13 +146,37 @@ def optuna_space(trial):
         },
     }
 
-def run_training():
+def run_training(cluster=False, use_optuna=True, lr=None, clip_param=None, train_batch_size=None, minibatch_size=None):
+
     """
     Build and run the PPO algorithm for a fixed number of iterations, saving models.
     """
-    if CLUSTER:
+    if cluster:
         # Connect to the cluster
         ray.init(address="auto")
+    
+    config = build_algo_config()
+
+    if not use_optuna:
+        # Build dictionary with only provided args (non-None)
+        fixed_hyperparams = {}
+        if lr is not None:
+            fixed_hyperparams["lr"] = lr
+        if clip_param is not None:
+            fixed_hyperparams["clip_param"] = clip_param
+        if train_batch_size is not None:
+            fixed_hyperparams["train_batch_size"] = train_batch_size
+        if minibatch_size is not None:
+            fixed_hyperparams["minibatch_size"] = minibatch_size
+
+        print("[Using fixed hyperparameters]", fixed_hyperparams)
+        config.training(**fixed_hyperparams)
+
+        algo = config.build()
+        for i in range(100):  # Run for 100 iterations
+            result = algo.train()
+            print(f"Iter {i}: reward_mean = {result['env_runners/episode_reward_mean']}")
+        return
 
 
     optuna_search = OptunaSearch(
@@ -172,8 +196,8 @@ def run_training():
     
     print("Torch sees:", torch.cuda.device_count(), "GPUs; available:", torch.cuda.is_available())
 
-    
-    config = build_algo_config()
+
+
     tuner = Tuner(
         PPO,                              
         param_space=config.to_dict(),
@@ -202,8 +226,15 @@ def run_training():
 
 if __name__ == "__main__":
     
-    CLUSTER = parse_args()  
-    run_training()
+    args = parse_args()
+    run_training(
+        cluster=args.cluster,
+        use_optuna=not args.no_optuna,
+        lr=args.lr,
+        clip_param=args.clip_param,
+        train_batch_size=args.train_batch_size,
+        minibatch_size=args.minibatch_size,
+    )
 
 """
 1. Num_env_runners creates x copies of the environment

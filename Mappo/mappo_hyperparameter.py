@@ -153,7 +153,7 @@ def run_training():
     asha = ASHAScheduler(
         metric="env_runners/episode_reward_mean",
         mode="max",
-        max_t=200, # trials that survive long enough get stopped at 50 iters
+        max_t=50, # trials that survive long enough get stopped at 50 iters
         grace_period=5, # stop a trial if it is longer than 5 iterations
     )
     
