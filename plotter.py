@@ -60,7 +60,7 @@ def plot(dir_path):
         lw=2,            # line‐width
     )
 
-    plt.xlabel('Timesteps $(\\times10^5)$', fontsize=16)
+    plt.xlabel('Iterations', fontsize=16)
     plt.ylabel('Average return', fontsize=16)
 
     # Create hyperparameter summary string
@@ -84,7 +84,7 @@ def plot(dir_path):
 
 
     plt.tight_layout()
-    plt.savefig(f"{dir_path}/result_{int(time.time())}.png", bbox_inches='tight')
+    plt.savefig("results/ippo_hyperparameter/ippo_hyper_5.png", bbox_inches='tight')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process input directory for plotting")
