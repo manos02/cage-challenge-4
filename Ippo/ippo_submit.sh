@@ -31,4 +31,7 @@ sleep 10
 
 cd $HOME/projects/cage-challenge-4
 
-python Ippo/ippo_hyperparameter.py --cluster
+python Ippo/ippo_hyperparameter.py --cluster --no-optuna --lr 4.0637e-5 --clip-param 0.17566 --train-batch-size 177718 --minibatch-size 3889
+
+
+

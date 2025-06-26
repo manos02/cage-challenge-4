@@ -32,9 +32,8 @@ def get_return_values(i, dir, parent_path):
 
             df.to_csv(os.path.join(parent_path, f'IPPO-{i}_hyper.csv'))
 
-root_directories = ["Ippo/ray_results/PPO_2025-06-19_07-47-00"
-                
-                    ]
+# Include the desired directories
+root_directories = ["Ippo/ray_results/PPO_2025-06-19_07-47-00"]
 
 for rootdir in root_directories:
     subdirs = [name for name in os.listdir(rootdir)

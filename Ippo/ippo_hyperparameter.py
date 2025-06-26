@@ -19,6 +19,7 @@ import ray
 import torch
 from helper import parse_args
 from optuna.samplers import TPESampler
+from ray import air
 
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -158,7 +159,7 @@ def run_training(cluster=False, use_optuna=True, lr=None, clip_param=None, train
     config = build_algo_config()
 
     if not use_optuna:
-        # Build dictionary with only provided args (non-None)
+        # Build dictionary with only provided args
         fixed_hyperparams = {}
         if lr is not None:
             fixed_hyperparams["lr"] = lr
@@ -172,11 +173,20 @@ def run_training(cluster=False, use_optuna=True, lr=None, clip_param=None, train
         print("[Using fixed hyperparameters]", fixed_hyperparams)
         config.training(**fixed_hyperparams)
 
-        algo = config.build()
-        for i in range(100):  # Run for 100 iterations
-            result = algo.train()
-            print(f"Iter {i}: reward_mean = {result['env_runners/episode_reward_mean']}")
-        return
+        tuner = Tuner(
+            PPO,
+            tune_config=TuneConfig(
+                metric="env_runners/episode_return_mean",
+                mode="max",
+                num_samples=1,
+            ),
+            param_space=config,
+            run_config=RunConfig(
+                storage_path="~/projects/cage-challenge-4/Ippo/ray_results",
+                stop={"training_iteration": 200}
+            ),
+        )
+        results = tuner.fit()
 
 
     optuna_search = OptunaSearch(
