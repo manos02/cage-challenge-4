@@ -1,5 +1,4 @@
 
-from rich import print
 from CybORG import CybORG
 from CybORG.Agents import SleepAgent, EnterpriseGreenAgent, FiniteStateRedAgent
 from CybORG.Simulator.Scenarios import EnterpriseScenarioGenerator
@@ -14,7 +13,6 @@ from hmarl_action_mask_model import TorchActionMaskModelHppo
 import ray
 from ray.train import RunConfig
 from ray.tune import Tuner, TuneConfig
-import numpy as np
 from helper import parse_args
 import gymnasium
 
@@ -163,7 +161,8 @@ def build_algo_config():
         .training(
             model={"custom_model": "hmarl_model"},
             lr=1e-5,
-            grad_clip_by=0.2,
+            grad_clip_by="global_norm",
+            grad_clip=0.2,
             train_batch_size=150000, # NOTE: 1000 for quick testing, normally 100 000
             minibatch_size=6000
         )
@@ -174,8 +173,8 @@ def build_algo_config():
 
     return config
 
-def run_training():
-    if CLUSTER and not ray.is_initialized():
+def run_training(cluster):
+    if cluster and not ray.is_initialized():
         # Connect to the cluster
         ray.init(address="auto")
 
@@ -184,7 +183,7 @@ def run_training():
 
     tuner = Tuner(
         PPO,                              
-        param_space=config.to_dict(),
+        param_space=config,
         tune_config=TuneConfig(
             num_samples=1, # how many Optuna trials. Each time with different sampling 
         ),
@@ -199,5 +198,5 @@ def run_training():
 
 if __name__ == "__main__":
     
-    CLUSTER = parse_args()      
-    run_training()
+    args = parse_args()     
+    run_training(args.cluster)
