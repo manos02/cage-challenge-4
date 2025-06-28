@@ -162,8 +162,10 @@ def build_algo_config():
         )
         .training(
             model={"custom_model": "hmarl_model"},
-            train_batch_size=100000, # NOTE: 1000 for quick testing, normally 100 000
-            minibatch_size=4000
+            lr=1e-5,
+            grad_clip_by=0.2,
+            train_batch_size=150000, # NOTE: 1000 for quick testing, normally 100 000
+            minibatch_size=6000
         )
         .experimental(
             _disable_preprocessor_api=True,  
