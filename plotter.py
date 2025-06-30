@@ -11,26 +11,8 @@ def plot(dir_path):
     # Load the csv files into a list of 1d array
     csv_files = sorted(glob.glob(f"{dir_path}/*.csv"))
     
-    returns = []
-    data_list = []
-    meta_info_list = []
 
-    for f in csv_files:
-        df = pd.read_csv(f)
-        if len(df.columns) > 100:
-            returns.append(df.iloc[:, 2].values)
-        else:
-            returns.append(df.iloc[:, 1].values)
-
-        data_list.append(returns)
-
-        meta_info_list.append({
-            "lr": df['lr'].iloc[0] if 'lr' in df.columns else None,
-            "clip_param": df['clip_param'].iloc[0] if 'clip_param' in df.columns else None,
-            "train_batch_size": df['train_batch_size'].iloc[0] if 'train_batch_size' in df.columns else None,
-            "minibatch_size": df['minibatch_size'].iloc[0] if 'minibatch_size' in df.columns else None,
-        })
-    
+    data_list = [pd.read_csv(f).iloc[:,2].values for f in csv_files]
     labels = [os.path.splitext(os.path.basename(f))[0] for f in csv_files]
 
     # Get the algorithm names
@@ -38,15 +20,16 @@ def plot(dir_path):
     algorithm_names = [label.split("_")[0] for label in labels]
 
     # Trim to the shorted length
-    min_len = max(map(len, returns))
-    returns = [d[:min_len] for d in returns]
+    min_len = min(map(len, data_list))
+    data_list = [d[:min_len] for d in data_list]
 
     episodes = np.arange(min_len)
     rows = []
-    for algorithm, trial_name, data in zip(algorithm_names, labels, returns):
+    for algorithm, trial_name, data in zip(algorithm_names, labels, data_list):
         for ep, val in zip(episodes, data):
             rows.append((ep, algorithm, trial_name, val))
-    df_long = pd.DataFrame(rows, columns=["episode", "algorithm", "trial", "return"])
+    df_long = pd.DataFrame(rows, columns=["episode", "algorithm", "trial","return"])
+
 
     # Plot with a 95% credible interval around the mean
     sns.set_style("whitegrid", {'axes.edgecolor':'black'})
@@ -62,29 +45,8 @@ def plot(dir_path):
 
     plt.xlabel('Iterations', fontsize=16)
     plt.ylabel('Average return', fontsize=16)
-
-    # Create hyperparameter summary string
-    meta_text_lines = []
-    for label, meta in zip(labels, meta_info_list):
-        meta_text_lines.append(
-            f"{label}: lr={meta['lr']}, clip={meta['clip_param']}, "
-            f"batch={meta['train_batch_size']}, minibatch={meta['minibatch_size']}"
-        )
-
-    meta_text = "\n".join(meta_text_lines)
-
-    # Place the hyperparameter box below the plot
-    plt.gcf().text(
-        0.55, -0.08, meta_text,
-        fontsize=10,
-        ha='center',
-        va='top',
-        bbox=dict(boxstyle="round", facecolor="white", edgecolor="black", alpha=0.7)
-    )
-
-
     plt.tight_layout()
-    plt.savefig("results/mappo_hyperparameter/mappo_hyper_5.png", bbox_inches='tight')
+    plt.savefig(f"{dir_path}/result_{int(time.time())}.png")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process input directory for plotting")
