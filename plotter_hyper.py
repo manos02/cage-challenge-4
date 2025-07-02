@@ -84,7 +84,7 @@ def plot(dir_path):
 
 
     plt.tight_layout()
-    plt.savefig("results/mappo_hyperparameter/ippo_final.png", bbox_inches='tight')
+    plt.savefig("results/hmarl/hmarl_final.png", bbox_inches='tight')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process input directory for plotting")

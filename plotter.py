@@ -46,7 +46,8 @@ def plot(dir_path):
     plt.xlabel('Iterations', fontsize=16)
     plt.ylabel('Average return', fontsize=16)
     plt.tight_layout()
-    plt.savefig(f"{dir_path}/result_{int(time.time())}.png")
+    # plt.savefig(f"{dir_path}/result_{int(time.time())}.png")
+    plt.savefig("results/hmarl/hmarl_final.png", bbox_inches='tight')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process input directory for plotting")
