@@ -30,14 +30,10 @@ def get_return_values(i, dir, parent_path):
             df['train_batch_size'] = batch_size
             df['minibatch_size'] = minibatch_size
 
-            df.to_csv(os.path.join(parent_path, f'MAPPO-{i}_hyper.csv'))
+            df.to_csv(os.path.join(parent_path, f'IPPO-{i}_final.csv'))
 
 # Include the desired directories
-root_directories = ["Mappo/ray_results/PPO_2025-06-23_08-37-00",
-                    "Mappo/ray_results/PPO_2025-06-23_03-19-51",
-                    "Mappo/ray_results/PPO_2025-06-21_13-28-40",
-                    "Mappo/ray_results/PPO_2025-06-21_10-36-14"
-                    ]
+root_directories = ["Ippo/ray_results/PPO_2025-06-29_21-02-32"]
 
 for rootdir in root_directories:
     subdirs = [name for name in os.listdir(rootdir)
