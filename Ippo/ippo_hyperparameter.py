@@ -231,8 +231,7 @@ def run_training(cluster=False, use_optuna=True, lr=None, clip_param=None, train
     print("Best config:", best_res.config)
     print("Best res metrics:", best_res.metrics)
 
-    # df = result_grid.get_dataframe() # get a dataframe
-    # df.to_csv("tune_results.csv", index=False) # save to csv format
+    
 
 if __name__ == "__main__":
     

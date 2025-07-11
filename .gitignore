@@ -2,6 +2,10 @@ myenv/
 
 ray_results
 
+assets/
+logs/
+bCS_2025_ManosS.pdf
+
 *.out
 
 *.csv

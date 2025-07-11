@@ -28,44 +28,6 @@ ModelCatalog.register_custom_model(
     "hmarl_model", TorchActionMaskModelHppo
 )
 
-# class CCPPOTorchPolicy(PPOTorchPolicy):
-#     def __init__(self, observation_space, action_space, config):
-#         PPOTorchPolicy.__init__(self, observation_space, action_space, config)
-#         self.config = config
-#         # just in case we are interested, the policy if is in self.config["__policy_id"]
-
-
-#     def handle_extra_ticks(self, postprocessed_batch):
-#         rewards = None
-
-#         # If a sub-policy or the len of rewards is only 1 value
-#         if "id" not in postprocessed_batch["obs"] or "rewards" not in postprocessed_batch or len(postprocessed_batch["rewards"]) <= 1:
-#             return postprocessed_batch
-
-#         '''
-#         Shifting master rewards by -1, only master policy has an id
-#         This happens for correct reward alignment, since some actions take several ticks
-#         '''
-#         rewards = postprocessed_batch["rewards"][1:]
-#         rewards = np.concatenate((rewards,[0]))
-#         postprocessed_batch["rewards"] = rewards
-
-#         return postprocessed_batch
-
-
-#     @override(PPOTorchPolicy)
-#     def postprocess_trajectory(
-#         self, sample_batch, other_agent_batches=None, episode=None
-#     ):
-        
-#         # handle extra ticks first, update rewards
-#         sample_batch = self.handle_extra_ticks(sample_batch)
-
-#         # continue with the default postprocessing (i.e., computing advantages)
-#         return super().postprocess_trajectory(
-#             sample_batch, other_agent_batches, episode
-#         )
-
 # Number of blue agents and mapping to policy IDs
 NUM_AGENTS = 5
 POLICY_MAP = {}
@@ -141,14 +103,6 @@ def build_algo_config():
         .multi_agent(
             policies={
                 ray_agent: PolicySpec(
-                    # The CCPPOTorchPolicy class correctly matches the reward for the master.
-                    # This is not necessary because we only need the subpolicies for H-MARL Expert, 
-                    # while the master follows an encoded rule.
-                    # Furthermore, we encountered errors when loading the models trained with CCPPOTorchPolicy 
-                    # on another rllib instalation and the fix was 
-                    # to restore and save the models during evaluation (see evaluation script)
-
-                    # policy_class = CCPPOTorchPolicy,
                     policy_class = PPOTorchPolicy,
                     observation_space = OBSERVATION_SPACE[ray_agent],
                     action_space = ACTION_SPACE[ray_agent],
@@ -163,7 +117,7 @@ def build_algo_config():
             lr=1e-5,
             grad_clip_by="global_norm",
             grad_clip=0.2,
-            train_batch_size=150000, # NOTE: 1000 for quick testing, normally 100 000
+            train_batch_size=150000, 
             minibatch_size=6000
         )
         .experimental(
