@@ -107,17 +107,6 @@ _No additional arguments are required for HMARL._
 
 ---
 
-## ✅ Requirements
-
-Make sure to install the required Python packages.  
-You can create a `requirements.txt` and install with:
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
 ## 📌 Notes
 
 - The `--cluster` flag is useful if running on a compute cluster with SLURM.
