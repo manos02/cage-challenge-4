@@ -51,9 +51,9 @@ pip install -r requirements.txt
 ```
 
 
-## 🚀 How to Run
+##  How to Run
 
-### ⚡ IPPO
+### IPPO
 
 Navigate into the `Ippo` directory and run:
 
@@ -81,7 +81,7 @@ python ippo_hyperparameter.py --no-optuna --lr 5e-5 --clip-param 0.2 --train-bat
 
 ---
 
-### ⚡ MAPPO
+### MAPPO
 
 Navigate into the `Mappo` directory and run:
 
@@ -94,7 +94,7 @@ _No additional arguments are required for MAPPO._
 
 ---
 
-### ⚡ HMARL
+### HMARL
 
 Navigate into the `Hmarl` directory and run:
 
@@ -107,7 +107,7 @@ _No additional arguments are required for HMARL._
 
 ---
 
-## 📌 Notes
+##  Notes
 
 - The `--cluster` flag is useful if running on a compute cluster with SLURM.
 - By default, IPPO uses Optuna for hyperparameter tuning. Use `--no-optuna` to disable tuning and use your fixed hyperparameters.
